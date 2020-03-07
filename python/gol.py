@@ -15,7 +15,7 @@ def clear_console():
 def inbounds(coords):
     row = coords.row
     col = coords.col
-    return row >= 0 and row <= WORLD_HEIGHT and col >= 0 and col <= WORLD_WIDTH
+    return row >= 0 and row < WORLD_HEIGHT and col >= 0 and col < WORLD_WIDTH
 
 
 def neighbors(coords):
@@ -66,10 +66,14 @@ class Cell:
     def kill(self):
         self.alive = False
 
+    def copy(self):
+        cell = Cell()
+        cell.set_state(self.alive)
+        return cell
 
 class World:
     def __init__(self):
-        cells = {}
+        cells = dict()
 
         for row in range(WORLD_HEIGHT):
             for col in range(WORLD_WIDTH):
@@ -80,11 +84,14 @@ class World:
         self.cells = cells
 
     def step(self):
-        past_state = deepcopy(self.cells)
+        past_state = dict()
         for coord_str, next_cell in self.cells.items():
-            coords = Coord.from_string(coord_str)
+            past_state[coord_str] = next_cell.copy()
+
+        for coord_str, next_cell in self.cells.items():
             past_cell = past_state[coord_str]
             living_neighbors = 0
+            coords = Coord.from_string(coord_str)
 
             for neighbor_coords in neighbors(coords):
                 try:

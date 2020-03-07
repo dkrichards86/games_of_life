@@ -9,7 +9,7 @@ const sleep = (millis) => {
 const inbounds = (coords) => {
 	const row = coords.row;
 	const col = coords.col;
-	return row >= 0 && row <= WORLD_HEIGHT && col >= 0 && col <= WORLD_WIDTH;
+	return row >= 0 && row < WORLD_HEIGHT && col >= 0 && col < WORLD_WIDTH;
 };
 
 const neighbors = (coords) => {
