@@ -1,0 +1,13 @@
+# Games of Life
+The goal of this repository is to compare various languages using Conway's Game of Life as a basis.
+
+Game of Life provides simple rules, but affords us the opportunity to explore a language's features.
+It:
+- uses conditionals,
+- uses iterables,
+- manipulates string,
+- manipualtes objects,
+- includes cursory functional programming patterns,
+- leverages `static` methods,
+- works with pointers/borrowership/memory management,
+- draws to console

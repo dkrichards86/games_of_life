@@ -1,0 +1,7 @@
+.direnv/
+.envrc
+
+.vscode/
+
+__pycache__/
+*.pyc
