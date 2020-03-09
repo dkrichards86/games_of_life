@@ -6,19 +6,23 @@ from time import sleep
 WORLD_WIDTH = 20
 WORLD_HEIGHT = 10
 INITIAL_SPAWN_TOLERANCE = 0.4
+MAX_STEPS = 100
 
 
 def clear_console():
+    """Clear the terminal."""
     os.system("clear")
 
 
 def inbounds(coords):
+    """Check if a cell falls within grid bounds."""
     row = coords.row
     col = coords.col
     return row >= 0 and row < WORLD_HEIGHT and col >= 0 and col < WORLD_WIDTH
 
 
 def neighbors(coords):
+    """Find all in-bounds neighbors of a given 2D coordinate."""
     row = coords.row
     col = coords.col
 
@@ -40,39 +44,49 @@ def neighbors(coords):
 
 
 class Coord:
+    """Coord describes a 2D position in a grid."""
+
     def __init__(self, row, col):
+        """Initialize Coord."""
         self.row = row
         self.col = col
 
     @classmethod
     def from_string(cls, coord_str):
+        """Given a string of coordinates, build a new Coord."""
         parts = coord_str.split(',')
         return cls(int(parts[0]), int(parts[1]))
 
     def __str__(self):
+        """Stringify a Coord."""
         return "{},{}".format(self.row, self.col)
 
 
 class Cell:
+    """Cell represents a single living entity in the grid."""
+
     def __init__(self):
+        """Initialize Cell."""
         self.alive = False
 
     def set_state(self, state):
+        """Set the cell's alive state."""
         self.alive = state
 
     def spawn(self):
+        """Spawn the cell."""
         self.alive = True
 
     def kill(self):
+        """Kill off the cell."""
         self.alive = False
 
-    def copy(self):
-        cell = Cell()
-        cell.set_state(self.alive)
-        return cell
 
 class World:
+    """World is a 2D grid filled with Cells."""
+
     def __init__(self):
+        """Build a new world with cells in a random state."""
         cells = dict()
 
         for row in range(WORLD_HEIGHT):
@@ -84,15 +98,17 @@ class World:
         self.cells = cells
 
     def step(self):
-        past_state = dict()
-        for coord_str, next_cell in self.cells.items():
-            past_state[coord_str] = next_cell.copy()
+        """Apply automata rules to all cells in the grid."""
+        # Make a deep copy of the state of the world. Game of Life rules are based on current
+        # timestep. We will use this to determine next state. 
+        past_state = deepcopy(self.cells)
 
         for coord_str, next_cell in self.cells.items():
             past_cell = past_state[coord_str]
             living_neighbors = 0
             coords = Coord.from_string(coord_str)
 
+            # Grab the number of living cells surrounding the current cell.
             for neighbor_coords in neighbors(coords):
                 try:
                     neighbor = past_state[neighbor_coords]
@@ -101,19 +117,21 @@ class World:
                 except KeyError:
                     continue
 
+            # Apply Conway's rules.
             if past_cell.alive:
                 if living_neighbors < 2:
-                    # underpopulation
+                    # Kill due to underpopulation
                     next_cell.kill()
                 elif living_neighbors > 3:
-                    # overpopulation
+                    # Kill due to overpopulation
                     next_cell.kill()
             else:
                 if living_neighbors == 3:
-                    # reproduce
+                    # Reproduce
                     next_cell.spawn()
 
     def draw(self):
+        """Print the current state of the world to terminal."""
         output_str = ""
 
         for row in range(WORLD_HEIGHT):
@@ -131,10 +149,14 @@ class World:
         print(output_str, end=" ")
 
 
-if __name__ == '__main__':
+def main():
+    """Play Conway's Game of Life."""
     world = World()
-    while True:
+    for _ in range(MAX_STEPS):
         clear_console()
         world.draw()
         world.step()
         sleep(0.5)
+
+if __name__ == '__main__':
+    main()

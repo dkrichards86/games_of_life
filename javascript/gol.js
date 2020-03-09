@@ -1,17 +1,30 @@
 const WORLD_HEIGHT = 10;
 const WORLD_WIDTH = 20;
 const INITIAL_SPAWN_TOLERANCE = 0.4;
+const MAX_STEPS = 100;
 
-const sleep = (millis) => {
-    return new Promise(resolve => setTimeout(resolve, millis));
-};
+/**
+ * Sleep for a given number of milliseconds.
+ */
+const sleep = (millis) => new Promise(resolve => setTimeout(resolve, millis));
 
+/**
+ * Clear the terminal.
+ */
+const clearConsole = () => console.clear();
+
+/**
+ * Check if a cell falls within grid bounds.
+ */
 const inbounds = (coords) => {
 	const row = coords.row;
 	const col = coords.col;
 	return row >= 0 && row < WORLD_HEIGHT && col >= 0 && col < WORLD_WIDTH;
 };
 
+/**
+ * Find all in-bounds neighbors of a given 2D coordinate.
+ */
 const neighbors = (coords) => {
 	const row = coords.row;
 	const col = coords.col;
@@ -36,39 +49,69 @@ const neighbors = (coords) => {
 	return neighbors;
 };
 
+/**
+ * Coord describes a 2D position in a grid.
+ */
 class Coord {
+    /**
+     * Initialize Coord.
+     */
     constructor(row, col) {
         this.row = row;
         this.col = col;
     }
 
+    /**
+     * Stringify a Coord.
+     */
     toString() {
         return `${this.row},${this.col}`;
     }
 
+    /**
+     * Given a string of coordinates, build a new Coord.
+     */
     static fromString(coordString) {
         const parts = coordString.split(',');
         return new Coord(parseInt(parts[0]), parseInt(parts[1]));
     }
 }
 
+/**
+ * Cell represents a single living entity in the grid.
+ */
 class Cell {
+    /**
+     * Initialize Cell.
+     */
     constructor() {
         this.alive = false;
     }
 
+    /**
+     * Set the cell's alive state.
+     */
     setState(state) {
         this.alive = state;
     }
 
+    /**
+     * Kill off the cell.
+     */
     kill() {
         this.alive = false;
     }
 
+    /**
+     * Spawn the cell.
+     */
     spawn(){
         this.alive = true;
     }
 
+    /**
+     * Make a copy of the cell.
+     */
     copy() {
         let cell = new Cell();
         cell.setState(this.alive);
@@ -76,7 +119,13 @@ class Cell {
     }
 }
 
+/**
+ * World is a 2D grid filled with Cells.
+ */
 class World {
+    /**
+     * Build a new world with cells in a random state.
+     */
     constructor() {
         let cells = {}
 
@@ -92,7 +141,12 @@ class World {
         this.cells = cells;
     }
 
+    /**
+     * Apply automata rules to all cells in the grid.
+     */
     step() {
+        // Make a deep copy of the state of the world. Game of Life rules are based on current
+        // timestep. We will use this to determine next state. 
         const pastState = {};
         Object.entries(this.cells).forEach(entry => {
             const [ coordStr, nextCell ] = entry;
@@ -105,6 +159,7 @@ class World {
             const pastCell = pastState[coordStr];
             let livingNeighbors = 0;
 
+            // Grab the number of living cells surrounding the current cell.
             neighbors(coords).forEach(neighborCoords => {
                 const neighbor = pastState[neighborCoords];
                 if (neighbor && neighbor.alive) {
@@ -112,23 +167,27 @@ class World {
                 }
             });
 
+            // Apply Conway's rules.
             if (pastCell.alive) {
                 if (livingNeighbors < 2) {
-                    // underpopulation
+                    // Kill due to underpopulation
                     nextCell.kill();
                 } else if (livingNeighbors > 3) {
-                    // overpopulation
+                    // Kill due to overpopulation
                     nextCell.kill();
                 }
             } else {
                 if (livingNeighbors == 3) {
-                    // reproduce
+                    // Reproduce
                     nextCell.spawn();
                 }
             }
         });
     }
 
+    /**
+     * Print the current state of the world to terminal.
+     */
     draw() {
         let outputString = "";
         for (let row = 0; row < WORLD_HEIGHT; row++) {
@@ -147,10 +206,13 @@ class World {
     }
 }
 
+/**
+ * Play Conway's Game of Life.
+ */
 const main = async () => {
     let world = new World();
-    while (true) {
-        console.clear();
+    for (let i = 0; i < MAX_STEPS; i++) {
+        clearConsole();
         world.draw()
         world.step()
         await sleep(500);
