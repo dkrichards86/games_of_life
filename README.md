@@ -26,3 +26,4 @@ Game of Life is currently translated into the following langauges:
 - JavaScript
 - Go
 - PHP
+- Ruby
