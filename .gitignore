@@ -5,3 +5,8 @@
 
 __pycache__/
 *.pyc
+
+*.rbc
+
+target/
+Cargo.lock
