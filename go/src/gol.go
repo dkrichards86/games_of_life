@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	WorldWidth            = 40
-	WorldHeight           = 20
+	WorldWidth            = 20
+	WorldHeight           = 10
 	InitialSpawnTolerance = 0.4
 	MaxSteps              = 100
 )
@@ -145,21 +145,19 @@ func NewWorld() *World {
 
 // Apply automata rules to all cells in the grid.
 func (w *World) Step() {
-	// Make a deep copy of the state of the world. Game of Life rules are based on current
-	// timestep. We will use this to determine next state.
-	pastState := make(map[string]*Cell)
-	for coordStr, cell := range w.Cells {
-		pastState[coordStr] = cell.Copy()
-	}
+	// Make a new map containing the future state of the world. Game of Life rules are based on
+	// current timestep. We will use this to maintain next state.
+	nextState := make(map[string]*Cell)
 
-	for coordStr, nextCell := range w.Cells {
-		pastCell := pastState[coordStr]
+	for coordStr, _ := range w.Cells {
+		pastCell := w.Cells[coordStr]
 		livingNeighbors := 0
 		coords := CoordFromString(coordStr)
+		nextCell := pastCell.Copy()
 
 		// Grab the number of living cells surrounding the current cell.
 		for _, neighborCoords := range neighbors(coords) {
-			neighbor, ok := pastState[neighborCoords]
+			neighbor, ok := w.Cells[neighborCoords]
 			if ok && neighbor.Alive {
 				livingNeighbors++
 			}
@@ -180,7 +178,9 @@ func (w *World) Step() {
 				nextCell.Spawn()
 			}
 		}
+		nextState[coordStr] = nextCell
 	}
+	w.Cells = nextState
 }
 
 // Print the current state of the world to terminal.

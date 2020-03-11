@@ -127,22 +127,20 @@ class World
 
     """Apply automata rules to all cells in the grid."""
     def step()
-        # Make a deep copy of the state of the world. Game of Life rules are based on current
-        # timestep. We will use this to determine next state. 
-        past_state = Hash.new
-        @cells.each do |coord_str, next_cell|
-            past_state[coord_str] = next_cell.copy
-        end
+        # Make a new map containing the future state of the world. Game of Life rules are based on
+        # current timestep. We will use this to maintain next state.
+        next_state = Hash.new
 
         @cells.each do |coord_str, next_cell|
-            past_cell = past_state[coord_str]
+            past_cell = @cells[coord_str]
             living_neighbors = 0
             coords = Coord.from_s(coord_str)
+            next_cell = past_cell.copy
 
             # Grab the number of living cells surrounding the current cell.
             for neighbor_coords in neighbors(coords)
-                if past_state.key?(neighbor_coords)
-                    neighbor = past_state[neighbor_coords] 
+                if @cells.key?(neighbor_coords)
+                    neighbor = @cells[neighbor_coords] 
                     if neighbor.alive
                         living_neighbors += 1
                     end
@@ -164,7 +162,11 @@ class World
                     next_cell.spawn()
                 end
             end
+
+            next_state[coord_str] = next_cell
         end
+
+        @cells = next_state
     end
 
     """Print the current state of the world to terminal."""

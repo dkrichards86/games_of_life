@@ -145,23 +145,19 @@ class World {
      * Apply automata rules to all cells in the grid.
      */
     step() {
-        // Make a deep copy of the state of the world. Game of Life rules are based on current
-        // timestep. We will use this to determine next state. 
-        const pastState = {};
-        Object.entries(this.cells).forEach(entry => {
-            const [ coordStr, nextCell ] = entry;
-            pastState[coordStr] = nextCell.copy();
-        });
+        // Make a new map containing the future state of the world. Game of Life rules are based on
+        // current timestep. We will use this to maintain next state.
+        const nextState = {};
 
-        Object.entries(this.cells).forEach(entry => {
-            const [ coordStr, nextCell ] = entry;
-            const coords = Coord.fromString(coordStr);
-            const pastCell = pastState[coordStr];
+        Object.keys(this.cells).forEach(coordStr => {
+            const pastCell = this.cells[coordStr];
             let livingNeighbors = 0;
+            const coords = Coord.fromString(coordStr);
+            const nextCell = pastCell.copy();
 
             // Grab the number of living cells surrounding the current cell.
             neighbors(coords).forEach(neighborCoords => {
-                const neighbor = pastState[neighborCoords];
+                const neighbor = this.cells[neighborCoords];
                 if (neighbor && neighbor.alive) {
                     livingNeighbors++;
                 }
@@ -182,7 +178,11 @@ class World {
                     nextCell.spawn();
                 }
             }
+
+            nextState[coordStr] = nextCell;
         });
+
+        this.cells = nextState;
     }
 
     /**

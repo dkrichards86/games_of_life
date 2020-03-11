@@ -109,6 +109,13 @@
         }
 
         /**
+         * Spawn the cell.
+         */
+        public function spawn() {
+            $this->alive = true;
+        }
+
+        /**
          * Kill off the cell.
          */
         public function kill() {
@@ -116,10 +123,12 @@
         }
 
         /**
-         * Spawn the cell.
+         * Make a copy of the cell.
          */
-        public function spawn() {
-            $this->alive = true;
+        public function copy() {
+            $cell = new Cell();
+            $cell->setState($this->alive);
+            return $cell;
         }
     }
 
@@ -149,24 +158,22 @@
          * Apply automata rules to all cells in the grid.
          */
         public function step() {
-            // Make a deep copy of the state of the world. Game of Life rules are based on current
-            // timestep. We will use this to determine next state. 
-            $pastState = array();
-            foreach($this->cells as $coordStr => $nextCell) {
-                $pastState[$coordStr] = clone $nextCell;
-            }
+            // Make a new map containing the future state of the world. Game of Life rules are based on
+            // current timestep. We will use this to maintain next state.
+            $nextState = array();
 
-            foreach($this->cells as $coordStr => $nextCell) {
-                $pastCell = $pastState[$coordStr];
+            foreach($this->cells as $coordStr => $cell) {
+                $pastCell = $this->cells[$coordStr];
                 $livingNeighbors = 0;
                 $coords = Coord::fromString($coordStr);
+                $nextCell = $pastCell->copy();
 
                 // Grab the number of living cells surrounding the current cell.
                 foreach(neighbors($coords) as $neighborCoords) {
-                    if (!array_key_exists($neighborCoords, $pastState)) {
+                    if (!array_key_exists($neighborCoords, $this->cells)) {
                         continue;
                     }
-                    $neighbor = $pastState[$neighborCoords];
+                    $neighbor = $this->cells[$neighborCoords];
 
                     if ($neighbor->alive) {
                         $livingNeighbors++;
@@ -188,7 +195,11 @@
                         $nextCell->spawn();
                     }
                 }
+
+                $nextState[$coordStr] = $nextCell;
             }
+
+            $this->cells = $nextState;
         }
 
         /**

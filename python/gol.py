@@ -81,6 +81,12 @@ class Cell:
         """Kill off the cell."""
         self.alive = False
 
+    def copy(self):
+        """Make a copy of the cell.."""
+        cell = Cell()
+        cell.set_state(self.alive)
+        return cell
+
 
 class World:
     """World is a 2D grid filled with Cells."""
@@ -99,19 +105,20 @@ class World:
 
     def step(self):
         """Apply automata rules to all cells in the grid."""
-        # Make a deep copy of the state of the world. Game of Life rules are based on current
-        # timestep. We will use this to determine next state. 
-        past_state = deepcopy(self.cells)
+        # Make a new map containing the future state of the world. Game of Life rules are based on
+        # current timestep. We will use this to maintain next state.
+        next_state = dict()
 
-        for coord_str, next_cell in self.cells.items():
-            past_cell = past_state[coord_str]
+        for coord_str in self.cells.keys():
+            past_cell = self.cells[coord_str]
             living_neighbors = 0
             coords = Coord.from_string(coord_str)
+            next_cell = past_cell.copy()
 
             # Grab the number of living cells surrounding the current cell.
             for neighbor_coords in neighbors(coords):
                 try:
-                    neighbor = past_state[neighbor_coords]
+                    neighbor = self.cells[neighbor_coords]
                     if neighbor.alive:
                         living_neighbors += 1
                 except KeyError:
@@ -129,6 +136,9 @@ class World:
                 if living_neighbors == 3:
                     # Reproduce
                     next_cell.spawn()
+
+            next_state[coord_str] = next_cell
+        self.cells = next_state
 
     def draw(self):
         """Print the current state of the world to terminal."""
